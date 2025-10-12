@@ -1,0 +1,297 @@
+{
+  "createdAt": "2025-10-12T00:14:14.428Z",
+  "updatedAt": "2025-10-12T23:35:23.000Z",
+  "id": "YmdReqa7ERnBl8gs",
+  "name": "Github Workflows Backup",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        496
+      ],
+      "id": "d5090400-7569-46e4-9849-59c9c83ebbd0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        496
+      ],
+      "id": "e1f9b122-cfb1-4702-9bf4-eeb45087be39",
+      "name": "Obtener los Workflows",
+      "credentials": {
+        "n8nApi": {
+          "id": "lULdbO4YcJCeJEXd",
+          "name": "n8n account - bodas.com.mx"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "workflow_data",
+              "name": "workflow_json",
+              "value": "={{ JSON.stringify($json, null, 2) }}",
+              "type": "string"
+            },
+            {
+              "id": "filename",
+              "name": "filename",
+              "value": "={{ $json.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() }}_{{ $json.id }}.json",
+              "type": "string"
+            },
+            {
+              "id": "workflow_id",
+              "name": "workflow_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "workflow_name",
+              "name": "workflow_name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        496
+      ],
+      "id": "dab30732-e048-4043-9580-7afb9f53684e",
+      "name": "Preparar Datos"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_OWNER }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_REPO }}",
+          "mode": "name"
+        },
+        "filePath": "=workflows/{{ $json.filename }}",
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        496
+      ],
+      "id": "ad8ea63d-1892-4bf7-a843-e9b911798cd1",
+      "name": "Verificar si Existe",
+      "webhookId": "ee53721d-0898-40ac-864d-344ad2289985",
+      "credentials": {
+        "githubApi": {
+          "id": "MXicbYfLcyhoBYEO",
+          "name": "GitHub account - falcony45@gmail.com"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "file_exists",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        496
+      ],
+      "id": "57aec1cc-dd4b-4fce-a650-57490958760f",
+      "name": "¿Archivo Existe?"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_OWNER }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_REPO }}",
+          "mode": "name"
+        },
+        "filePath": "=workflows/{{ $('Preparar Datos').item.json.filename }}",
+        "fileContent": "={{ $('Preparar Datos').item.json.workflow_json }}",
+        "commitMessage": "=Update workflow: {{ $('Preparar Datos').item.json.workflow_name }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        384
+      ],
+      "id": "14f82ec2-8963-4ff8-8fc0-d02af6a3247b",
+      "name": "Actualizar en GitHub",
+      "webhookId": "4c558bcc-5ec2-4ede-acfe-bce74524d254"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_OWNER }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $env.GITHUB_REPO }}",
+          "mode": "name"
+        },
+        "filePath": "=workflows/{{ $('Preparar Datos').item.json.filename }}",
+        "fileContent": "={{ $('Preparar Datos').item.json.workflow_json }}",
+        "commitMessage": "=Add new workflow: {{ $('Preparar Datos').item.json.workflow_name }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        608
+      ],
+      "id": "aaeca78c-d7f7-418b-837e-c86804b68d70",
+      "name": "Crear en GitHub",
+      "webhookId": "15fc2c9a-df1a-4abb-872a-87ac29614833"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Obtener los Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener los Workflows": {
+      "main": [
+        [
+          {
+            "node": "Preparar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Datos": {
+      "main": [
+        [
+          {
+            "node": "Verificar si Existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar si Existe": {
+      "main": [
+        [
+          {
+            "node": "¿Archivo Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Archivo Existe?": {
+      "main": [
+        [
+          {
+            "node": "Actualizar en GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear en GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6ac0f7db-57f6-4a33-a449-f35522792e4a",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-10-12T00:14:14.430Z",
+      "updatedAt": "2025-10-12T00:14:14.430Z",
+      "role": "workflow:owner",
+      "workflowId": "YmdReqa7ERnBl8gs",
+      "projectId": "0KR2Gq9Kds58xeIV"
+    }
+  ],
+  "tags": []
+}
