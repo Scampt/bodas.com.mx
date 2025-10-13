@@ -1,6 +1,6 @@
 {
   "createdAt": "2025-10-13T01:24:10.846Z",
-  "updatedAt": "2025-10-13T01:44:51.000Z",
+  "updatedAt": "2025-10-13T03:19:27.000Z",
   "id": "AVEmoWyN7zcv2zsJ",
   "name": "Eliminar workflows archivados",
   "active": false,
@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
+        80,
         0
       ],
       "id": "f8a6db2e-841a-4c4e-aea1-33a36e796abf",
@@ -32,13 +32,15 @@
       ],
       "id": "059f3655-31bd-4faf-b054-c68797236317",
       "name": "Obtener todos los workflows",
+      "notesInFlow": true,
       "credentials": {
         "httpHeaderAuth": {
           "id": "rdazfP1AIVrejyD7",
           "name": "Header Auth account - n8n API Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "Agregar api key de n8n como Header Auth"
     },
     {
       "parameters": {
@@ -55,6 +57,19 @@
     },
     {
       "parameters": {
+        "jsCode": "const total = $items().length;\nreturn [{ json: { totalEliminados: total, mensaje: `Se eliminaron ${total} workflows archivados de n8n.` } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "6969b1b5-9351-44f3-a6b6-aafccdea5ebd",
+      "name": "Resumen"
+    },
+    {
+      "parameters": {
         "method": "DELETE",
         "url": "=https://n8n-bodasmx-n8n.z5cvat.easypanel.host/api/v1/workflows/{{$json.id}}",
         "authentication": "genericCredentialType",
@@ -68,7 +83,7 @@
         0
       ],
       "id": "6b1f39ca-0679-43e6-bf23-d6f0fbbb8ddb",
-      "name": "Obtener todos los workflows1",
+      "name": "Borrar Workflows archivados",
       "credentials": {
         "httpHeaderAuth": {
           "id": "rdazfP1AIVrejyD7",
@@ -76,19 +91,6 @@
         }
       },
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const total = $items().length;\nreturn [{ json: { totalEliminados: total, mensaje: `Se eliminaron ${total} workflows archivados de n8n.` } }];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        976,
-        0
-      ],
-      "id": "6969b1b5-9351-44f3-a6b6-aafccdea5ebd",
-      "name": "Resumen"
     }
   ],
   "connections": {
@@ -118,14 +120,14 @@
       "main": [
         [
           {
-            "node": "Obtener todos los workflows1",
+            "node": "Borrar Workflows archivados",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Obtener todos los workflows1": {
+    "Borrar Workflows archivados": {
       "main": [
         [
           {
@@ -143,7 +145,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "4ff30de0-711c-478c-99f7-b3989ce3b46f",
+  "versionId": "ded6ceb5-b500-43f3-929f-99ea6f817d99",
   "triggerCount": 0,
   "shared": [
     {
