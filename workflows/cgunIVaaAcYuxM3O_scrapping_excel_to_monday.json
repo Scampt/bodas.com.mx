@@ -1,0 +1,1515 @@
+{
+  "createdAt": "2025-10-02T15:42:19.799Z",
+  "updatedAt": "2025-10-12T01:15:48.000Z",
+  "id": "cgunIVaaAcYuxM3O",
+  "name": "Scrapping Excel to Monday",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4cbea8cd-5c0a-4de5-b05c-da60723d09e0",
+              "name": "name",
+              "value": "={{ $json['Customer name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9382fa21-2883-4933-9cb7-756fab5e04f7",
+              "name": "ID Venue",
+              "value": "={{ $json[\"ID EMPRESA\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "450adf32-b927-43e7-9396-18f25fdde150",
+              "name": "Dirección",
+              "value": "={{ $json.Address }}",
+              "type": "string"
+            },
+            {
+              "id": "70ca2856-335a-43ed-ba7f-c4ca9433aaf5",
+              "name": "Teléfono",
+              "value": "={{ $json.telephone }}",
+              "type": "string"
+            },
+            {
+              "id": "486534e5-40f3-4d4e-865d-67fe9918daf5",
+              "name": "Movil",
+              "value": "={{ $json.Mobile }}",
+              "type": "string"
+            },
+            {
+              "id": "9c0b0847-99d6-483d-a6ef-76346db42ee2",
+              "name": "Contact Venue",
+              "value": "={{ $json[\"Contact person\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "80f7e136-1e2a-427a-a626-736827c2d7c9",
+              "name": "Email",
+              "value": "={{ $json[\"e-mail\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "7bb97666-a0b2-4db6-8e5f-bea5355edaf8",
+              "name": "URL Bodas",
+              "value": "={{ $json[\"URL Web\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "116a5fe6-e691-4ad0-bded-9e7523e8b2a4",
+              "name": "Fecha Fin de Contrato",
+              "value": "={{ $json[\"Contract end date\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "9c1b62d3-6ca7-4b6e-991e-b6ae3f6c2bec",
+              "name": "End Contract RW",
+              "value": "={{ $json['End Contract Date\tRW date'] }}",
+              "type": "number"
+            },
+            {
+              "id": "0e724f65-2e6f-40d4-b6cb-0be69db362f5",
+              "name": "Renovación de Contrato",
+              "value": "={{ $json['Fecha RW'] }}",
+              "type": "number"
+            },
+            {
+              "id": "b62c22a9-6b37-4c6b-ba68-3c2f26798edb",
+              "name": "Producto",
+              "value": "={{ $json.Product }}",
+              "type": "string"
+            },
+            {
+              "id": "562bd7a0-9c8b-4e90-be99-647f8d8d7de1",
+              "name": "Estado",
+              "value": "={{ $json.City }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2384,
+        0
+      ],
+      "id": "05214ad6-2bc8-4d1d-be7d-71b2de6c4989",
+      "name": "Mapeo de variables"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convierte una fecha de Excel (ej. 46017) al formato YYYY-MM-DD\nconst excelToLocale = (value) => {\n  if (!value) return null;\n\n  // Si el valor ya viene como texto tipo \"2025-12-25\" o \"25/12/2025\", lo dejamos igual\n  if (typeof value === 'string' && (value.includes('/') || value.includes('-'))) {\n    return value;\n  }\n\n  // Si viene como número (Excel date)\n  const excelEpoch = 25569; // 1 Jan 1970 - 1 Jan 1900 offset\n  const millis = (value - excelEpoch) * 86400 * 1000;\n\n  return new Date(millis).toISOString().split('T')[0];\n};\n\n// Procesar cada item del nodo anterior\nreturn items.map(item => {\n  const data = item.json;\n\n  // Convertimos todas las fechas relevantes\n  const fechaFin = excelToLocale(data[\"Fecha Fin de Contrato\"]);\n  const endContractRW = excelToLocale(data[\"End Contract RW\"]);\n  const renovacion = excelToLocale(data[\"Renovación de Contrato\"]);\n\n  return {\n    json: {\n      ...data,\n      \"Fecha Fin de Contrato\": fechaFin,\n      \"End Contract RW\": endContractRW,\n      \"Renovación de Contrato\": renovacion,\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        0
+      ],
+      "id": "97886d43-d6c1-42c4-8eff-0833521a1dd0",
+      "name": "Transformación de fecha"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "boardItem",
+        "boardId": "18162394069",
+        "groupId": "new_group45304",
+        "name": "={{ $json.name }}",
+        "additionalFields": {
+          "columnValues": "={{ \n  JSON.stringify({\n    id_venue: $json[\"ID Venue\"],\n    text6: $json[\"Dirección\"],\n    text_mksz2qkn: $json[\"Teléfono\"],\n    text_mkszykzf: $json[\"Movil\"],\n    texto: $json[\"Contact Venue\"],\n    email: { \n      email: $json[\"Email\"], \n      text: $json[\"Email\"] \n    },\n    texto_mkmf8jc0: $json[\"URL Bodas\"],\n    date25: $json[\"Fecha Fin de Contrato\"],\n    date_mkszmtcq: $json[\"End Contract RW\"],\n    date_mksvhg6v: $json[\"Renovación de Contrato\"],\n    color_mkqgwk4v: {\n      index: $json.mapeoProductos[$json[\"Producto\"].toLowerCase()] ?? 1\n    },\n    dropdown9: { labels: [$json[\"Estado\"]] }\n  }) \n}}"
+        }
+      },
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        80,
+        144
+      ],
+      "id": "ac9c0676-3a78-440e-bb6b-64266087340f",
+      "name": "Exportación a Monday",
+      "credentials": {
+        "mondayComOAuth2Api": {
+          "id": "dE8g2W2GVOjXMeZt",
+          "name": "Monday.com account majonb@interprika.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomamos el settings_str del HTTP Request anterior\nconst raw = items[0].json.data.boards[0].columns[0].settings_str;\nconst settings = JSON.parse(raw);\n\n// Creamos un diccionario limpio label -> índice (todo en minúsculas)\nconst labelMap = {};\nfor (const [index, name] of Object.entries(settings.labels)) {\n  if (name && name.trim()) {\n    labelMap[name.trim().toLowerCase()] = Number(index);\n  }\n}\n\n// Retornamos un solo objeto con el mapeo\nreturn [{ json: labelMap }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        0
+      ],
+      "id": "4f305d26-889c-4452-849b-0711cb3d838d",
+      "name": "Mapeo de productos"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "boardItem",
+        "operation": "changeMultipleColumnValues",
+        "boardId": "18162394069",
+        "itemId": "={{ $json.monday.id }}",
+        "columnValues": "={{ \n  JSON.stringify({\n    name:$json.name,\n    id_venue: $json[\"ID Venue\"],\n    text6: $json[\"Dirección\"],\n    text_mksz2qkn: $json[\"Teléfono\"],\n    text_mkszykzf: $json[\"Movil\"],\n    texto: $json[\"Contact Venue\"],\n    email: { \n      email: $json[\"Email\"], \n      text: $json[\"Email\"] \n    },\n    texto_mkmf8jc0: $json[\"URL Bodas\"],\n    date25: $json[\"Fecha Fin de Contrato\"],\n    date_mkszmtcq: $json[\"End Contract RW\"],\n    date_mksvhg6v: $json[\"Renovación de Contrato\"],\n    color_mkqgwk4v: {\n      index: $json.mapeoProductos[$json[\"Producto\"].toLowerCase()] ?? 1\n    },\n    dropdown9: { labels: [$json[\"Estado\"]] }\n  }) \n}}"
+      },
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "6537fbba-33d9-4f2e-8c69-52e0a2e5e1b1",
+      "name": "Actualizar datos Existentes en Monday",
+      "credentials": {
+        "mondayComOAuth2Api": {
+          "id": "dE8g2W2GVOjXMeZt",
+          "name": "Monday.com account majonb@interprika.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "boardItem",
+        "operation": "getByColumnValue",
+        "boardId": "18162394069",
+        "columnId": "id_venue",
+        "columnValue": "={{ $json[\"ID Venue\"] }}",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        0
+      ],
+      "id": "9a9ef1c4-105e-44c6-87fb-57db5e295bea",
+      "name": "Buscar item existente por ID Venue",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mondayComOAuth2Api": {
+          "id": "dE8g2W2GVOjXMeZt",
+          "name": "Monday.com account majonb@interprika.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos los datos originales del Excel (Replicar mapeo de productos)\nconst excelItems = $items(\"Replicar mapeo de productos\", 0, 0);\n\n// Obtenemos los resultados del nodo de Monday (pueden ser menos)\nconst mondayItems = items;\n\n// Creamos un nuevo arreglo manteniendo la posición de Excel\nreturn excelItems.map((excelItem, index) => {\n  // Si existe un resultado en Monday con el mismo índice, lo usamos; si no, usamos un objeto vacío\n  const mondayItem = mondayItems[index]?.json || {};\n\n  // Verificamos si existe un ID Venue en Monday (según los column_values)\n  const idVenueMonday = mondayItem?.column_values?.find(c => c.id === \"id_venue\")?.text?.trim() || \"\";\n\n  // Si hay texto en ese campo, significa que ya existe en Monday\n  const existeEnMonday = idVenueMonday !== \"\";\n\n  return {\n    json: {\n      ...excelItem.json,   // Datos originales del Excel\n      monday: mondayItem,  // Resultado de Monday (vacío si no existe)\n      existeEnMonday       // true si ya existe, false si no\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ],
+      "id": "95feaa46-3c55-462b-b0d8-ed087e4a1a73",
+      "name": "Uniendo datos de Monday + Nuevos"
+    },
+    {
+      "parameters": {
+        "content": "# Crear credenciales Bearer Auth\n\nMethod: POST\nURL: https://api.monday.com/v2\nAuthentication: Generic Credential Type\nGeneric Auth Type: Bearer Auth\nBearer Auth: Creación de credenciales:\n- Colocar API de cuenta Monday\n### Send Headers\nName - Value\nContent-Type - application/json\n\n### Send Body\n- Primero necesitamos saber las etiquetas de las columnas de Monday\n- Usamos esta query:\n{\n  boards (ids: ponerIDdelBoard) {\n    columns {\n      id\n      title\n      settings_str\n    }\n  }\n}\n\nBUSCAMOS EL ID DE LA COLUMNA PRODUCTO\n\n- Despues vamos a colocar el id de la columna para traer sus etiquetas\n{\n  boards (ids: ponerIDdelBoard) {\n    columns (ids: [\"color_mkwbqqmt\"]) {\n      id\n      title\n      settings_str\n    }\n  }\n}",
+        "height": 848,
+        "width": 512,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        448
+      ],
+      "id": "0f4a52eb-83d4-457c-b5ca-31145ec7a261",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.monday.com/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"query\": \"{ boards (ids: 1209925112) { columns (ids: [\\\"color_mkqgwk4v\\\"]) { id title settings_str } } }\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1856,
+        0
+      ],
+      "id": "d9d987d5-58c1-454a-a7e0-016ff37fc636",
+      "name": "Obtención de etiquetas (producto) Monday",
+      "executeOnce": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "zdBwfsdYlY0VCF9A",
+          "name": "Bearer Auth account Monday Majo API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Proceso de revisión y actualización\n- Aquí se hace la comprobación si ya existen los datos mediante el ID Venue de Excel",
+        "height": 784,
+        "width": 1360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -352
+      ],
+      "id": "fcea7326-3c16-4a45-898e-291f024aa4ae",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Proceso de unión de datos y revisón ID Venue existente\n- Se hace la unión de las etiquetas de la columna de productos con los datos de Excel\n- Se realiza la busqueda en Monday si existe algún elemento usando el ID Venue\n- Unión de datos nuevos y datos de Monday\n- Se realiza la condicional para decidir que hacer con la información",
+        "height": 784,
+        "width": 1072,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        -352
+      ],
+      "id": "c8efc328-c57d-492d-9bc8-f520d46eeb4b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Donde todo comienza\n- Aquí se hace la conexión directa a la Base de Datos\nSeguido de ello se hace el mapeo de variables para un mejor control de elementos\n- Se crea un script para transforar las fechas\n- Se hace la obtención de etiquetas para la columna de Producto\n- Seguido de esto se hace un mapeo de las etiquetas mediante un objecto Js",
+        "height": 784,
+        "width": 1152,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        -352
+      ],
+      "id": "510ad6e3-d812-4323-ba68-f9fb4e3115ee",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "boardItem",
+        "operation": "get",
+        "itemId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -16
+      ],
+      "id": "6c7238fe-bb80-47c7-ab8d-000b03def2b2",
+      "name": "Obtener datos del tablero",
+      "credentials": {
+        "mondayComOAuth2Api": {
+          "id": "dE8g2W2GVOjXMeZt",
+          "name": "Monday.com account majonb@interprika.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Crear credenciales Bearer Auth\n\nMethod: POST\nURL: https://api.monday.com/v2\nAuthentication: Generic Credential Type\nGeneric Auth Type: Bearer Auth\nBearer Auth: Creación de credenciales:\n- Colocar API de cuenta Monday\n### Send Headers\nName - Value\nContent-Type - application/json\n\n### Send Body\n- Primero necesitamos saber las etiquetas de las columnas de Monday\n- Usamos esta query:\n{\n  boards (ids: ponerIDdelBoard) {\n    columns {\n      id\n      title\n      settings_str\n    }\n  }\n}\n\nBUSCAMOS EL ID DE LAS COLUMNAS PARA DEJAR UN VALOR DEFAULT\n\n- La columna de Estado de Proceso por defecto va a tener PF",
+        "height": 848,
+        "width": 512,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        448
+      ],
+      "id": "e504f5ad-2abd-4345-b1d6-0cd8a674f96c",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 8
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Tlsac-BMEltzjq5U1rh7z-8pP0QVl0qf-BMrVadS7bs",
+          "mode": "list",
+          "cachedResultName": "Tour virtual - New data -  Interprika 2025 PARA PRUEBAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tlsac-BMEltzjq5U1rh7z-8pP0QVl0qf-BMrVadS7bs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tour Virtual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tlsac-BMEltzjq5U1rh7z-8pP0QVl0qf-BMrVadS7bs/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2592,
+        0
+      ],
+      "id": "04c403ee-6d63-4255-8f5a-b2aa22cf8825",
+      "name": "Base de Datos",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "ZoodLLPG0rYP3zUd",
+          "name": "Google Sheets Trigger account soporte@valtmx.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst excelItems = $items(\"Transformación de fecha\");\nconst mapeoProductos = $node[\"Mapeo de productos\"].json;\n\nreturn excelItems.map(item => ({\n  json: {\n    ...item.json,\n    mapeoProductos\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        0
+      ],
+      "id": "cc131329-b6f8-4ee6-b523-6f111aaf35d9",
+      "name": "Replicar mapeo de productos"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1888,
+        32
+      ],
+      "id": "46ac3bf7-df7f-44bf-ac00-f1e7b8a3a878",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "0m8hCRuJ9UwuMq5W",
+          "name": "OpenAi account - soporte@valtmx.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Proceso de automatización con Agente IA",
+        "height": 784,
+        "width": 2560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -352
+      ],
+      "id": "7f02e003-f7c6-4c13-8b98-22beba3695c0",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24027165-a810-46c2-b562-3001ec564ead",
+              "leftValue": "={{ $json.monday.id }}",
+              "rightValue": "=0",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "643a7451-a8d2-4f43-a077-c1e9b98807ae",
+      "name": "Si el ID Venue existe"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres el Agente Principal de Bodas.com.mx (CEO Agent AI).\nTu función es automatizar el envío del primer correo a los clientes y actualizar su estado en Monday.\n\nDatos del cliente:\n- Nombre: {{ $json[\"Nombre\"] }}\n- Empresa / Venue ID: {{ $json[\"ID Venue\"] }}\n- Contacto: {{ $json[\"Contact Venue\"] }}\n- Email: {{ $json[\"Email\"] }}\n- Producto contratado: {{ $json[\"Producto\"] }}\n- Estado del proceso: {{ $json[\"Estado del proceso\"] }}\n- Técnico asignado: {{ $json[\"Técnico\"] }}\n- Estado del cliente: {{ $json[\"Estado\"] }}\n- Estado Email: {{ $json[\"Estado Email\"] }}\n\nTienes acceso a las siguientes herramientas:\n1. **Enviar primer email** → envía el correo de presentación a través de Zoho Mail.\n2. **Cambiar estado Email a enviar primer correo** → actualiza en Monday el campo “Estado Email” para reflejar que el correo fue enviado.\n\nInstrucciones:\n- Envía el primer correo usando **Enviar primer email**.\n- Después, ejecuta la herramienta **Cambiar estado Email a enviar primer correo**.\n- No repitas la acción si el estado ya está en “Enviar primer correo”.\n- No generes texto visible, solo ejecuta las herramientas en orden.\n- No avances automáticamente a otras etapas ni esperes entradas manuales.\n\nObjetivo: enviar el correo inicial y sincronizar el estado de envío en Monday.\n",
+        "options": {
+          "systemMessage": "=Eres un agente AI de Bodas.com.mx que coordina flujos automatizados de correo.\n\nTu propósito:\n- Enviar el primer correo de contacto mediante Zoho Mail.\n- Actualizar el estado “Estado Email” en Monday a “Enviar primer correo”.\n\nReglas:\n- Si el estado ya es “Enviar primer correo”, no repitas la acción.\n- No generes texto ni explicaciones visibles.\n- Ejecuta las herramientas en este orden:\n  1. Enviar primer email\n  2. Cambiar estado Email a enviar primer correo\n- No avances automáticamente a otras etapas hasta recibir un nuevo disparo manual."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2096,
+        -256
+      ],
+      "id": "22a793e2-72c1-45e4-a127-1ea102de887e",
+      "name": "CEO"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1904,
+        352
+      ],
+      "id": "674f9962-9570-4832-870c-9f09f197b042",
+      "name": "Supabase Vector Store",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "tableId": "clientes",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name"
+            },
+            {
+              "fieldId": "id_venue"
+            },
+            {
+              "fieldId": "estado_del_proceso"
+            },
+            {
+              "fieldId": "fecha_cita"
+            },
+            {
+              "fieldId": "email"
+            },
+            {
+              "fieldId": "telefono"
+            },
+            {
+              "fieldId": "movil"
+            },
+            {
+              "fieldId": "producto"
+            },
+            {
+              "fieldId": "zona"
+            },
+            {
+              "fieldId": "comentario_comercial"
+            },
+            {
+              "fieldId": "fecha_actualizacion"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        352
+      ],
+      "id": "7de5c10f-9f03-46d4-b6fe-d019171f7dab",
+      "name": "Crear o actualizar clientes",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9ZSuKUqxsVYKzR8R",
+          "name": "Supabase account - Bodas.com.mx"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bf8ca5b-1f12-4771-8f3c-a6f6086ac043",
+              "name": "Nombre",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "0e07fea4-4c64-4140-80c9-71e782154394",
+              "name": "Fecha de Agenda",
+              "value": "={{ $json.column_values[0] }}",
+              "type": "object"
+            },
+            {
+              "id": "d8dc4bab-774f-4d64-b621-c001c6ff3abf",
+              "name": "ID Venue",
+              "value": "={{ $json.column_values[1] }}",
+              "type": "object"
+            },
+            {
+              "id": "c1f12d64-e508-44b3-8456-41c5fdce8834",
+              "name": "Estado del proceso",
+              "value": "={{ $json.column_values[2] }}",
+              "type": "object"
+            },
+            {
+              "id": "307f7dcf-9767-4a0b-94df-2f2c18882c98",
+              "name": "Dirección",
+              "value": "={{ $json.column_values[3] }}",
+              "type": "object"
+            },
+            {
+              "id": "ee84c909-7b65-4fb6-b1bf-59a528adc054",
+              "name": "Teléfono",
+              "value": "={{ $json.column_values[4] }}",
+              "type": "object"
+            },
+            {
+              "id": "7b64bc5b-8c9e-48bb-a61e-f84c13e2b73f",
+              "name": "Móvil",
+              "value": "={{ $json.column_values[5] }}",
+              "type": "object"
+            },
+            {
+              "id": "916df879-74f7-40ba-866b-2cb7894289ec",
+              "name": "Contact Venue",
+              "value": "={{ $json.column_values[6] }}",
+              "type": "object"
+            },
+            {
+              "id": "e5826049-a211-45d3-87e2-162bc42493b4",
+              "name": "Email",
+              "value": "={{ $json.column_values[7] }}",
+              "type": "object"
+            },
+            {
+              "id": "1511e7e9-8c51-4d33-aa37-0fca1ceefa88",
+              "name": "URL Bodas",
+              "value": "={{ $json.column_values[8] }}",
+              "type": "object"
+            },
+            {
+              "id": "419b8b70-8c40-4401-bb97-ce61f2b00d4a",
+              "name": "Ciudad (Weather)",
+              "value": "={{ $json.column_values[9] }}",
+              "type": "object"
+            },
+            {
+              "id": "ac82dc52-8463-43c5-b5c3-66d19b07e743",
+              "name": "Fecha Fin de Contrato",
+              "value": "={{ $json.column_values[10] }}",
+              "type": "object"
+            },
+            {
+              "id": "fbc79239-7768-48ee-9788-ed1f1037c522",
+              "name": "End Contract RW",
+              "value": "={{ $json.column_values[11] }}",
+              "type": "object"
+            },
+            {
+              "id": "09224452-cf35-4f66-8ce7-b1daff5777d1",
+              "name": "Renovación de Contrato",
+              "value": "={{ $json.column_values[12] }}",
+              "type": "object"
+            },
+            {
+              "id": "329d04dc-06db-4964-a977-10afffde679a",
+              "name": "Estatus",
+              "value": "={{ $json.column_values[13] }}",
+              "type": "object"
+            },
+            {
+              "id": "c9be0ce8-f846-4cf2-abe4-2cfeb9b822a3",
+              "name": "Producto",
+              "value": "={{ $json.column_values[14] }}",
+              "type": "object"
+            },
+            {
+              "id": "c8f94c95-4580-455b-ae76-ccc3a28c32de",
+              "name": "Emails",
+              "value": "={{ $json.column_values[15] }}",
+              "type": "object"
+            },
+            {
+              "id": "8b5380e0-3d94-4457-838c-377b03584e43",
+              "name": "Llamadas",
+              "value": "={{ $json.column_values[16] }}",
+              "type": "object"
+            },
+            {
+              "id": "7217f484-2182-43db-84fb-af193881919c",
+              "name": "Whatsapp",
+              "value": "={{ $json.column_values[17] }}",
+              "type": "object"
+            },
+            {
+              "id": "d014aa87-7178-4218-8806-e1c047f86677",
+              "name": "Interes de cliente",
+              "value": "={{ $json.column_values[18] }}",
+              "type": "object"
+            },
+            {
+              "id": "53e45395-718c-4bcc-8065-065f3f92c1db",
+              "name": "Anulaciones",
+              "value": "={{ $json.column_values[19] }}",
+              "type": "object"
+            },
+            {
+              "id": "67bf87e2-18bd-4a24-84b0-d273cd10f6bf",
+              "name": "Comentario Comercial",
+              "value": "={{ $json.column_values[20] }}",
+              "type": "object"
+            },
+            {
+              "id": "1ba9689d-7647-43a8-b38d-7c46db5aa68e",
+              "name": "Automat",
+              "value": "={{ $json.column_values[21] }}",
+              "type": "object"
+            },
+            {
+              "id": "a1cc9048-6592-4e15-b3e4-0e5f764d4819",
+              "name": "Fecha de la cita",
+              "value": "={{ $json.column_values[22] }}",
+              "type": "object"
+            },
+            {
+              "id": "203fcf1b-c8ca-411d-883b-503c48122dd3",
+              "name": "Viaticos",
+              "value": "={{ $json.column_values[23] }}",
+              "type": "object"
+            },
+            {
+              "id": "b7d3f200-d555-49cb-9f7a-cde6e81ce3fa",
+              "name": "Hora",
+              "value": "={{ $json.column_values[24] }}",
+              "type": "object"
+            },
+            {
+              "id": "3b8956c7-ace5-4551-bfb5-47f6694bd28a",
+              "name": "Estado",
+              "value": "={{ $json.column_values[25] }}",
+              "type": "object"
+            },
+            {
+              "id": "43b9f80b-5d0d-4bf7-bcb5-afbb9eb8fc7e",
+              "name": "Técnico",
+              "value": "={{ $json.column_values[26] }}",
+              "type": "object"
+            },
+            {
+              "id": "cd74aaf5-f78a-473d-9bcd-d69e0079293d",
+              "name": "Next Move",
+              "value": "={{ $json.column_values[28] }}",
+              "type": "object"
+            },
+            {
+              "id": "57af140e-dbee-4b55-9288-ccd9971ebff6",
+              "name": "Contactar Interprika",
+              "value": "={{ $json.column_values[29] }}",
+              "type": "object"
+            },
+            {
+              "id": "39fc1c3a-8120-4ba1-8686-131f42890c73",
+              "name": "Creación de Elemento",
+              "value": "={{ $json.column_values[30] }}",
+              "type": "object"
+            },
+            {
+              "id": "2d77e390-b522-4e50-8a6b-5a7d476d2acc",
+              "name": "Zona",
+              "value": "={{ $json.column_values[31] }}",
+              "type": "object"
+            },
+            {
+              "id": "64c8aea8-d938-4c0b-9ebd-5c497aeaa16e",
+              "name": "Item ID",
+              "value": "={{ $json.column_values[32] }}",
+              "type": "object"
+            },
+            {
+              "id": "ec393a59-b153-4906-b43f-a35a58946b60",
+              "name": "Last Updated",
+              "value": "={{ $json.column_values[33] }}",
+              "type": "object"
+            },
+            {
+              "id": "1d0ea039-5665-45f4-a99d-df7fe0d3100f",
+              "name": "Estado WhatsApp",
+              "value": "={{ $json.column_values[34] }}",
+              "type": "object"
+            },
+            {
+              "id": "4ff50e0a-e22f-438b-b685-c77cacce1353",
+              "name": "Estado Email",
+              "value": "={{ $json.column_values[35] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        -240
+      ],
+      "id": "a07839d8-e81c-4fe3-8e90-586a67e9790b",
+      "name": "Mapeando columnas Monday"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yfkvpx5Bpe3gV8O1",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yfkvpx5Bpe3gV8O1",
+          "cachedResultName": "Whatsapp automatizado"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2352,
+        352
+      ],
+      "id": "f3273b25-997e-4359-be21-f37a7dff8941",
+      "name": "Whatsapp automatizado",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2KiLK3UqcH5RAAMg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2KiLK3UqcH5RAAMg",
+          "cachedResultName": "Correos automatizados"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2512,
+        352
+      ],
+      "id": "6da7230d-532b-4134-847e-c87ac380f1a5",
+      "name": "Correo automatizado",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "056aa1eb-4b1f-48dd-a24b-aece6fe53de8",
+              "name": "Nombre",
+              "value": "={{ $json.Nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "d5d6a9cf-1fe9-47e7-b3f2-778d470fb3d5",
+              "name": "=Fecha de agenda",
+              "value": "={{ $json['Fecha de Agenda'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "3fcd4e7d-3f1e-44c3-85f0-ce1f2a606a9a",
+              "name": "ID Venue",
+              "value": "={{ $json['ID Venue'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "5d0d89fc-46ae-47b3-941a-61489c37949a",
+              "name": "Estado del proceso",
+              "value": "={{ $json['Estado del proceso'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "3f1c62e6-7eb9-4c28-8e27-d5b67144eb08",
+              "name": "Dirección",
+              "value": "={{ $json['Dirección'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "dfcf8559-fbd3-4038-9472-293cd91bcefc",
+              "name": "Teléfono",
+              "value": "={{ $json['Teléfono'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "2cb6878f-e68d-4755-8ac9-bf60a4775327",
+              "name": "Móvil",
+              "value": "={{ $json['Móvil'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "c30dfeb2-1113-46ab-b86a-059a3b5cefe2",
+              "name": "Contact Venue",
+              "value": "={{ $json['Contact Venue'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "4253982b-b325-42b8-a84b-c915cf6777b6",
+              "name": "Email",
+              "value": "={{ $json.Email.text }}",
+              "type": "string"
+            },
+            {
+              "id": "fae0804e-ed9a-4f4f-a0f0-6f83df5016ee",
+              "name": "URL Bodas",
+              "value": "={{ $json['URL Bodas'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "dfe49e8f-5d6a-459e-b2b1-dd44c5b2b8c7",
+              "name": "Ciudad (Weather)",
+              "value": "={{ $json['Ciudad (Weather)'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "4d91b2b4-4513-4c87-a537-4d5f2e8517e0",
+              "name": "Fecha Fin de Contrato",
+              "value": "={{ $json['Fecha Fin de Contrato'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "1ea183b6-b65f-4ab1-b0c6-d02452222ba1",
+              "name": "End Contract RW",
+              "value": "={{ $json['End Contract RW'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "151ad7f5-f554-4ce3-bbec-96c5f2436ed0",
+              "name": "Renovación de Contrato",
+              "value": "={{ $json['Renovación de Contrato'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "420cfdf6-fc63-4baa-ac6c-e70f42a77208",
+              "name": "Estatus",
+              "value": "={{ $json.Estatus.text }}",
+              "type": "string"
+            },
+            {
+              "id": "4886d1cf-1442-48b0-a68d-0756579e9407",
+              "name": "Producto",
+              "value": "={{ $json.Producto.text }}",
+              "type": "string"
+            },
+            {
+              "id": "6fc0e956-1697-4d87-b4a8-518db8b8d8f9",
+              "name": "Emails",
+              "value": "={{ $json.Emails.text }}",
+              "type": "string"
+            },
+            {
+              "id": "090538e8-8b17-4a00-9b73-c4d97710c3cb",
+              "name": "Llamadas",
+              "value": "={{ $json.Llamadas.text }}",
+              "type": "string"
+            },
+            {
+              "id": "9f737dab-b371-41ba-9268-3acc1013e1d7",
+              "name": "Whatsapp",
+              "value": "={{ $json.Whatsapp.text }}",
+              "type": "string"
+            },
+            {
+              "id": "98e39546-efac-41cc-8aad-4d21b9623907",
+              "name": "Interes de cliente",
+              "value": "={{ $json['Interes de cliente'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "cf5367b0-1201-4205-ae19-c9f9e3ae6346",
+              "name": "Anulaciones",
+              "value": "={{ $json.Anulaciones.text }}",
+              "type": "string"
+            },
+            {
+              "id": "98fa3770-c4e7-428e-b767-9d43265947ea",
+              "name": "Comentario Comercial",
+              "value": "={{ $json['Comentario Comercial'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "64d13949-eea2-4bc9-8ded-90f8b25a676b",
+              "name": "Automat",
+              "value": "={{ $json.Automat.text }}",
+              "type": "string"
+            },
+            {
+              "id": "88d9f7c9-c7a8-4e3a-b320-38117091b3c4",
+              "name": "Fecha de la cita",
+              "value": "={{ $json['Fecha de la cita'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "130969e3-f264-4f55-a505-792de637beea",
+              "name": "Viaticos",
+              "value": "={{ $json.Viaticos.text }}",
+              "type": "string"
+            },
+            {
+              "id": "82632c29-ab3a-4bb3-a6b0-0ab72ca7bbcc",
+              "name": "Hora",
+              "value": "={{ $json.Hora.text }}",
+              "type": "string"
+            },
+            {
+              "id": "f7a4d492-f41f-46ca-a094-e29e7ccb301a",
+              "name": "Estado",
+              "value": "={{ $json.Estado.text }}",
+              "type": "string"
+            },
+            {
+              "id": "83315dab-a856-492d-9505-5d59bcbd7e56",
+              "name": "Técnico",
+              "value": "={{ $json['Técnico'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "70896f24-373a-4311-8e89-8ca77aba27e3",
+              "name": "Next Move",
+              "value": "={{ $json['Next Move'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "f97ccac3-62ae-4217-8f6a-bd4a4d378d94",
+              "name": "Contactar Interprika",
+              "value": "={{ $json['Contactar Interprika'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "d4cf5603-1660-48ca-93af-ec9326b962ca",
+              "name": "Creación de Elemento",
+              "value": "={{ $json['Creación de Elemento'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "38b00530-5e08-4c4e-aa40-052c940a9216",
+              "name": "Zona",
+              "value": "={{ $json.Zona.text }}",
+              "type": "string"
+            },
+            {
+              "id": "eafe62f2-5998-4d0a-b647-3b5141656245",
+              "name": "Item ID",
+              "value": "={{ $json['Item ID'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "a1573f98-0230-46bd-9464-2e2337301118",
+              "name": "Last Updated",
+              "value": "={{ $json['Last Updated'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "7759bfca-1930-408f-97d4-c0c079b49e00",
+              "name": "Estado WhatsApp",
+              "value": "={{ $json['Estado WhatsApp'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "f66bb496-8d04-45bb-b174-a3f8b5535dd0",
+              "name": "Estado Email",
+              "value": "={{ $json['Estado Email'].text }}",
+              "type": "string"
+            },
+            {
+              "id": "11c6ae52-3e4a-4120-8375-59a788918279",
+              "name": "Whatsapp Contacto",
+              "value": "https://wa.me/5649505612",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        -240
+      ],
+      "id": "4d7c21d1-58a2-41b3-83a1-74f4e4fa20fb",
+      "name": "Valores de Monday"
+    },
+    {
+      "parameters": {
+        "fromEmail": "soporte@interprika.com",
+        "toEmail": "={{ $('Valores de Monday').item.json.Email }}",
+        "subject": "=¿Cuándo podemos grabar el tour virtual 360 en {{ $json.Nombre }}?",
+        "emailFormat": "text",
+        "text": "=Buenos días {{ $json['Contact Venue'] }},\n\nNos ponemos en contacto contigo para que puedas programar fecha para la grabación del Tour Virtual 360º para tu escaparate en Bodas.com.mx  Cientos de empresas ya disfrutan de los beneficios de esta innovadora herramienta y las parejas ya han podido visitar los salones y jardines de numerosos espacios desde cualquier dispositivo sin tener que desplazarse, ¡así que no esperes más y agenda tu grabación cuanto antes!\n\n📱 Puedes contactarnos directamente por WhatsApp para definir la fecha que mejor te funcione. {{ $json['Whatsapp Contacto'] }}\n\nCon el fin de garantizar un servicio de calidad, te recordamos las condiciones para llevar a cabo el servicio:\n\nLa grabación se llevará a cabo en 4 horas.\n\nEs muy recomendable que decores tu espacio para que los novios puedan imaginar cómo será su boda en tu espacio.\n\nEs imprescindible que no haya personal ni invitados en el lugar en el que el técnico esté grabando.\n\nAquí tienes algunos ejemplos para que puedas obtener ideas:\nhttps://my.matterport.com/show/?m=aH9eAFJyJri&play=1&hl=2&lang=es&brand=0&title=0&vr=0\n\nQuedamos a la espera de tus indicaciones.\nCualquier duda, también puedes comunicarte al 477-254-0469.\n\nUn cordial saludo,",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSendTool",
+      "typeVersion": 2.1,
+      "position": [
+        2400,
+        48
+      ],
+      "id": "a8b97fe1-b258-435d-985d-fee92fad8546",
+      "name": "Enviar primer email",
+      "webhookId": "d5551a4c-1408-475b-bc9f-ec6b9f23d14d",
+      "credentials": {
+        "smtp": {
+          "id": "GhyliWIO0PYy31Mj",
+          "name": "SMTP account Zoho Mail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "boardItem",
+        "operation": "changeColumnValue",
+        "boardId": "18162394069",
+        "itemId": "={{ $('Valores de Monday').item.json[\"Item ID\"] }}",
+        "columnId": "color_mkwkp29q",
+        "value": "={{ JSON.stringify({ \"label\": \"Enviar primer correo\" }) }}\n"
+      },
+      "type": "n8n-nodes-base.mondayComTool",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        16
+      ],
+      "id": "2d10c9f1-6d02-4dcc-ba9c-38be66b687e3",
+      "name": "Cambiar estado Email a enviar primer correo",
+      "credentials": {
+        "mondayComOAuth2Api": {
+          "id": "dE8g2W2GVOjXMeZt",
+          "name": "Monday.com account majonb@interprika.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "179b516b-988f-43b6-8b15-1882718c7e4b",
+              "leftValue": "={{ \n  (\n    ($json[\"Estado Email\"] || \"\").toString().trim().toLowerCase() !== \"enviar primer correo\"\n  )\n}}",
+              "rightValue": "Enviar primer correo",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        -240
+      ],
+      "id": "4cbd71b5-08f0-40c6-be0f-f085f21ee20a",
+      "name": "Estado email"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7abcade9-309f-4f99-a810-e08a9db1ee1c",
+              "name": "status",
+              "value": "El primer correo ya fue enviado, flujo detenido!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        -32
+      ],
+      "id": "96391ea7-ce6d-459f-bdb5-3dac65e58332",
+      "name": "Flujo detendo"
+    }
+  ],
+  "connections": {
+    "Mapeo de variables": {
+      "main": [
+        [
+          {
+            "node": "Transformación de fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transformación de fecha": {
+      "main": [
+        [
+          {
+            "node": "Obtención de etiquetas (producto) Monday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo de productos": {
+      "main": [
+        [
+          {
+            "node": "Replicar mapeo de productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar datos Existentes en Monday": {
+      "main": [
+        [
+          {
+            "node": "Obtener datos del tablero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exportación a Monday": {
+      "main": [
+        [
+          {
+            "node": "Obtener datos del tablero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar item existente por ID Venue": {
+      "main": [
+        [
+          {
+            "node": "Uniendo datos de Monday + Nuevos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Uniendo datos de Monday + Nuevos": {
+      "main": [
+        [
+          {
+            "node": "Si el ID Venue existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtención de etiquetas (producto) Monday": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener datos del tablero": {
+      "main": [
+        [
+          {
+            "node": "Mapeando columnas Monday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base de Datos": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replicar mapeo de productos": {
+      "main": [
+        [
+          {
+            "node": "Buscar item existente por ID Venue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CEO",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Si el ID Venue existe": {
+      "main": [
+        [
+          {
+            "node": "Actualizar datos Existentes en Monday",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exportación a Monday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CEO": {
+      "main": [
+        []
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Crear o actualizar clientes": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Mapeando columnas Monday": {
+      "main": [
+        [
+          {
+            "node": "Valores de Monday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whatsapp automatizado": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Correo automatizado": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Valores de Monday": {
+      "main": [
+        [
+          {
+            "node": "Estado email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar primer email": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cambiar estado Email a enviar primer correo": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estado email": {
+      "main": [
+        [
+          {
+            "node": "CEO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flujo detendo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Base de Datos": {
+      "documentId": "1Tlsac-BMEltzjq5U1rh7z-8pP0QVl0qf-BMrVadS7bs",
+      "sheetId": 0,
+      "lastRevision": 65,
+      "lastRevisionLink": "https://docs.google.com/spreadsheets/export?id=1Tlsac-BMEltzjq5U1rh7z-8pP0QVl0qf-BMrVadS7bs&revision=65&exportFormat=xlsx"
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "17e26d43-9625-4a87-aa5a-0b6e907b2715",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-10-02T15:42:19.801Z",
+      "updatedAt": "2025-10-02T15:42:19.801Z",
+      "role": "workflow:owner",
+      "workflowId": "cgunIVaaAcYuxM3O",
+      "projectId": "0KR2Gq9Kds58xeIV"
+    }
+  ],
+  "tags": [
+    {
+      "createdAt": "2025-10-09T02:23:30.480Z",
+      "updatedAt": "2025-10-09T02:23:30.480Z",
+      "id": "GTUgITnS8tIc6dCc",
+      "name": "edición"
+    },
+    {
+      "createdAt": "2025-10-09T02:22:22.948Z",
+      "updatedAt": "2025-10-09T02:22:22.948Z",
+      "id": "KC66WgMIV0Vz1t20",
+      "name": "open"
+    },
+    {
+      "createdAt": "2025-10-09T02:23:32.167Z",
+      "updatedAt": "2025-10-09T02:23:32.167Z",
+      "id": "KCwf5zqsqjmgLfRS",
+      "name": "facturación"
+    },
+    {
+      "createdAt": "2025-10-09T02:22:28.949Z",
+      "updatedAt": "2025-10-09T02:22:53.306Z",
+      "id": "LvKvpa1uLH0IqCYa",
+      "name": "creación de reservas"
+    },
+    {
+      "createdAt": "2025-10-09T02:22:59.532Z",
+      "updatedAt": "2025-10-09T02:22:59.532Z",
+      "id": "QCTBnjn1uegZi5vy",
+      "name": "confirmación de reservas"
+    },
+    {
+      "createdAt": "2025-10-09T02:23:20.076Z",
+      "updatedAt": "2025-10-09T02:23:20.076Z",
+      "id": "s4IPuHfR34AGtvV4",
+      "name": "confirmación meteorologi"
+    }
+  ]
+}
