@@ -1,9 +1,9 @@
 {
   "createdAt": "2025-10-12T00:14:14.428Z",
-  "updatedAt": "2025-10-13T14:58:06.000Z",
+  "updatedAt": "2025-10-13T15:33:23.000Z",
   "id": "YmdReqa7ERnBl8gs",
   "name": "Github Workflows Backup",
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -11,7 +11,7 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 6
+              "daysInterval": 5
             }
           ]
         }
@@ -152,8 +152,8 @@
           "conditions": [
             {
               "id": "ec93995f-3cc2-4d0d-b9e7-17afec1a8dcc",
-              "leftValue": "={{ $json.oldFileName || '' }}",
-              "rightValue": "={{ $json.filename || '' }}",
+              "leftValue": "={{ $json.oldFileName ?? $json.filename }}",
+              "rightValue": "={{ $json.filename }}",
               "operator": {
                 "type": "string",
                 "operation": "notEquals"
@@ -187,8 +187,13 @@
           "value": "={{ $json.github_repo }}",
           "mode": "name"
         },
-        "filePath": "={{ $json.oldFileName ? 'workflows/' + $json.oldFileName : '' }}",
-        "commitMessage": "=Remove old workflow file: {{$json.workflow_name}}"
+        "filePath": "={{ 'workflows/' + $json.oldFileName }}",
+        "commitMessage": "=Remove old workflow file: {{$json.oldFileName}}",
+        "additionalParameters": {
+          "committer": {
+            "name": "sha"
+          }
+        }
       },
       "type": "n8n-nodes-base.github",
       "typeVersion": 1.1,
@@ -333,7 +338,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// === Obtener workflows activos desde n8n ===\nconst workflowsNode = $items(\"Obtener todos los workflows\")[0].json.data || [];\n\n// Crear lista normalizada de nombres activos\nconst n8nWorkflows = workflowsNode\n  .filter(w => w.isArchived === false)\n  .map(w =>\n    w.name\n      .normalize(\"NFD\") // quita acentos\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .replace(/[^a-zA-Z0-9 ]/g, \"\") // quita símbolos extraños\n      .trim()\n      .toLowerCase() + \".json\"\n  );\n\nconsole.log(\"✅ Workflows activos en n8n:\", n8nWorkflows);\n\n// === Obtener archivos del repo GitHub ===\nlet repoData = $items(\"Obtener archivos GitHub (para comparar)\")[0].json;\n\n// Aseguramos que sea array\nif (!Array.isArray(repoData)) {\n  repoData = [];\n}\n\nconst githubFiles = repoData\n  .filter(f => f && f.name && f.name.endsWith(\".json\"))\n  .map(f => ({\n    name: f.name\n      .normalize(\"NFD\")\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .toLowerCase()\n      .trim(),\n    sha: f.sha,\n  }));\n\nconsole.log(\"📂 Archivos actuales en GitHub:\", githubFiles.map(f => f.name));\n\n// === Comparación ===\nconst eliminados = githubFiles.filter(\n  f => !n8nWorkflows.includes(f.name)\n);\n\nconsole.log(\"❌ Detectados para eliminar:\", eliminados);\n\n// === Si no hay archivos para eliminar ===\nif (eliminados.length === 0) {\n  return [\n    {\n      json: {\n        message: \"No hay workflows eliminados\",\n        count: 0,\n        n8nWorkflows,\n        githubFiles: githubFiles.map(f => f.name),\n      },\n    },\n  ];\n}\n\n// === Retornar los archivos que deben eliminarse ===\nreturn eliminados.map(f => ({\n  json: {\n    filename: f.name,\n    sha: f.sha,\n  },\n}));\n"
+        "jsCode": "// === Obtener workflows activos desde n8n ===\nconst workflowsNode = $items(\"Obtener todos los workflows\")[0]?.json?.data || [];\n\n// Crear lista normalizada de nombres activos (sin acentos ni caracteres raros)\nconst n8nWorkflows = workflowsNode\n  .filter(w => w.isArchived === false)\n  .map(w =>\n    w.name\n      .normalize(\"NFD\")\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .replace(/[^a-zA-Z0-9 ]/g, \"\")\n      .trim() + \".json\"\n  );\n\n// === Obtener archivos del repo GitHub ===\nconst allItems = $input.all();\n\nlet repoData = allItems\n  .flatMap(i => (Array.isArray(i.json) ? i.json : [i.json]))\n  .filter(x => x && (x.name || (Array.isArray(x) && x.length > 0)));\n\nif (repoData.length && !repoData[0].name && repoData[0].data) {\n  repoData = repoData[0].data;\n}\n\n// --- Normalizamos los nombres ---\nconst githubFiles = repoData\n  .filter(f => f && f.name && f.name.endsWith(\".json\"))\n  .map(f => ({\n    name: f.name\n      .normalize(\"NFD\")\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .trim(),\n    sha: f.sha,\n  }));\n\nconsole.log(\"📂 Archivos actuales en GitHub:\", githubFiles.map(f => f.name));\n\n// === Comparación: detectamos los que están en GitHub pero no en n8n ===\nconst eliminados = githubFiles.filter(f => !n8nWorkflows.includes(f.name));\n\n// === Si no hay archivos para eliminar ===\nif (eliminados.length === 0) {\n  return [\n    {\n      json: {\n        message: \"No hay workflows eliminados\",\n        count: 0,\n        n8nWorkflows,\n        githubFiles: githubFiles.map(f => f.name),\n      },\n    },\n  ];\n}\n\n// === Retornar los archivos que deben eliminarse ===\nreturn eliminados.map(f => ({\n  json: {\n    filename: f.name,\n    sha: f.sha,\n  },\n}));\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -347,52 +352,12 @@
     },
     {
       "parameters": {
-        "resource": "file",
-        "operation": "delete",
-        "owner": {
-          "__rl": true,
-          "value": "=Scampt",
-          "mode": "name"
-        },
-        "repository": {
-          "__rl": true,
-          "value": "=bodas.com.mx",
-          "mode": "name"
-        },
-        "filePath": "=workflows/{{$json.filename}}",
-        "commitMessage": "=Remove deleted workflow: {{$json.filename}}",
-        "additionalParameters": {
-          "committer": {
-            "name": "sha",
-            "email": "={{ $json.sha }}"
-          }
-        }
-      },
-      "type": "n8n-nodes-base.github",
-      "typeVersion": 1.1,
-      "position": [
-        -2592,
-        768
-      ],
-      "id": "74adbf50-6016-466b-b2a7-495e75edbc34",
-      "name": "Eliminar archivo del repositorio",
-      "webhookId": "f362471b-1b77-4b55-8355-af3a6c5ad289",
-      "credentials": {
-        "githubApi": {
-          "id": "MXicbYfLcyhoBYEO",
-          "name": "GitHub account - falcony45@gmail.com"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const total = $items().length;\nreturn [{ \n  json: { \n    totalEliminados: total,\n    mensaje: `Se eliminaron ${total} workflows que ya no existen en n8n.`\n  } \n}];\n"
+        "jsCode": "return [{\n  json: {\n    mensaje: `🧹 ${$input.all().length} workflows eliminados del repositorio.`,\n    fecha: new Date().toISOString()\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2368,
+        -2496,
         768
       ],
       "id": "006debf3-8b7f-49ab-a3ad-e9edcc99b660",
@@ -444,99 +409,6 @@
       "id": "a774c68e-0b74-4f9c-b564-2e6d27ad74f6",
       "name": "Procesar Workflows en Lotes",
       "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// === Obtener workflows activos desde n8n ===\nconst workflowsNode = $items(\"Obtener todos los workflows1\")[0]?.json?.data || [];\n\n// Crear lista normalizada de nombres activos (sin acentos ni caracteres raros)\nconst n8nWorkflows = workflowsNode\n  .filter(w => w.isArchived === false)\n  .map(w =>\n    w.name\n      .normalize(\"NFD\")\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .replace(/[^a-zA-Z0-9 ]/g, \"\")\n      .trim()\n      .toLowerCase() + \".json\"\n  );\n\nconsole.log(\"✅ Workflows activos en n8n:\", n8nWorkflows);\n\n// === Obtener archivos del repo GitHub ===\n// Usamos $input.all() para leer todo lo que venga del Merge (n8n + GitHub)\nconst allItems = $input.all();\n\nlet repoData = allItems\n  .flatMap(i => (Array.isArray(i.json) ? i.json : [i.json]))\n  .filter(x => x && (x.name || (Array.isArray(x) && x.length > 0)));\n\n// Si el primer elemento tiene propiedad `name`, entonces es la lista de archivos de GitHub\nif (repoData.length && !repoData[0].name && repoData[0].data) {\n  repoData = repoData[0].data;\n}\n\n// --- Normalizamos los nombres ---\nconst githubFiles = repoData\n  .filter(f => f && f.name && f.name.endsWith(\".json\"))\n  .map(f => ({\n    name: f.name\n      .normalize(\"NFD\")\n      .replace(/[\\u0300-\\u036f]/g, \"\")\n      .toLowerCase()\n      .trim(),\n    sha: f.sha,\n  }));\n\nconsole.log(\"📂 Archivos actuales en GitHub:\", githubFiles.map(f => f.name));\n\n// === Comparación: detectamos los que están en GitHub pero no en n8n ===\nconst eliminados = githubFiles.filter(f => !n8nWorkflows.includes(f.name));\n\nconsole.log(\"❌ Detectados para eliminar:\", eliminados);\n\n// === Si no hay archivos para eliminar ===\nif (eliminados.length === 0) {\n  return [\n    {\n      json: {\n        message: \"No hay workflows eliminados\",\n        count: 0,\n        n8nWorkflows,\n        githubFiles: githubFiles.map(f => f.name),\n      },\n    },\n  ];\n}\n\n// === Retornar los archivos que deben eliminarse ===\nreturn eliminados.map(f => ({\n  json: {\n    filename: f.name,\n    sha: f.sha,\n  },\n}));\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2544,
-        1616
-      ],
-      "id": "de60e338-c760-4e67-a0da-c406fb846ee9",
-      "name": "detectar eliminados1",
-      "alwaysOutputData": false
-    },
-    {
-      "parameters": {
-        "url": "=https://api.github.com/repos/Scampt/bodas.com.mx/contents/workflows",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -3120,
-        1808
-      ],
-      "id": "2a378926-897b-4c72-b809-b74d5bb535a6",
-      "name": "Obtener archivos GitHub (para comparar)1",
-      "alwaysOutputData": true,
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "qgU9cDNhzZtZ9dcM",
-          "name": "Bearer Auth account - Github Token - falcony45@gmail.com"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -3664,
-        1600
-      ],
-      "id": "9fed22f6-7f25-4c50-b3fb-9c808ee38257",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
-      "parameters": {
-        "url": "=https://n8n-bodasmx-n8n.z5cvat.easypanel.host/api/v1/workflows",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -3360,
-        1600
-      ],
-      "id": "c8265d94-b5fc-4e00-9688-7620c48155dc",
-      "name": "Obtener todos los workflows1",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "rdazfP1AIVrejyD7",
-          "name": "Header Auth account - n8n API Key"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -2832,
-        1616
-      ],
-      "id": "03f3350e-84c3-4cd8-a4f0-f6593f0b0d01",
-      "name": "Merge"
     }
   ],
   "connections": {
@@ -644,7 +516,7 @@
       "main": [
         [
           {
-            "node": "Eliminar archivo del repositorio",
+            "node": "Resumen de eliminados",
             "type": "main",
             "index": 0
           }
@@ -661,17 +533,6 @@
           },
           {
             "node": "Continuar flujo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Eliminar archivo del repositorio": {
-      "main": [
-        [
-          {
-            "node": "Resumen de eliminados",
             "type": "main",
             "index": 0
           }
@@ -728,55 +589,6 @@
           }
         ]
       ]
-    },
-    "Obtener archivos GitHub (para comparar)1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Obtener todos los workflows1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Obtener todos los workflows1": {
-      "main": [
-        [
-          {
-            "node": "Obtener archivos GitHub (para comparar)1",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "detectar eliminados1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "settings": {
@@ -784,14 +596,16 @@
   },
   "staticData": {
     "node:Schedule Trigger": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        287
+      ]
     }
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "a514d6ac-2bf2-4b80-9689-281298ddb3d0",
+  "versionId": "592a3c06-1ef3-4ece-83ba-563f1f82298b",
   "triggerCount": 1,
   "shared": [
     {
