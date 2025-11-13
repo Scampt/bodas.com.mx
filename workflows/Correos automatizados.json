@@ -1,6 +1,6 @@
 {
   "createdAt": "2025-10-08T20:06:02.168Z",
-  "updatedAt": "2025-10-11T00:53:14.000Z",
+  "updatedAt": "2025-11-10T15:23:41.000Z",
   "id": "2KiLK3UqcH5RAAMg",
   "name": "Correos automatizados",
   "active": false,
@@ -15,8 +15,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -480,
-        -816
+        -896,
+        -368
       ],
       "id": "a9a721ab-35e3-4d24-a76f-838b36efcabe",
       "name": "Revisar el estado de Email",
@@ -84,8 +84,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        48,
-        -192
+        80,
+        -256
       ],
       "id": "07290fe2-d9ba-4579-9bcd-8d2293e49105",
       "name": "Estado de Email"
@@ -145,8 +145,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -256,
-        -816
+        -672,
+        -368
       ],
       "id": "d2ab6987-cf56-4c94-9cc4-fbe5816e73d7",
       "name": "If",
@@ -161,8 +161,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        48,
-        -832
+        -368,
+        -384
       ],
       "id": "ad98eb84-ddfb-44fd-a44c-a816a057248c",
       "name": "Respond to Webhook",
@@ -686,15 +686,293 @@
       "name": "Valores de Monday"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Producto }}",
+                    "rightValue": "Tour virtual",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b6ce8eb8-923b-48a1-b435-a365a447bfe3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tour virtual"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "59dbbe04-1cd5-430b-ac96-183d06f7926e",
+                    "leftValue": "={{ $json.Producto }}",
+                    "rightValue": "My photo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "My photo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ae86ab32-0ad7-4e08-9414-cf6c69ed62bf",
+                    "leftValue": "={{ $json.Producto }}",
+                    "rightValue": "My photo Cate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "photo Cate"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
       "position": [
-        -432,
-        -208
+        -144,
+        -80
       ],
-      "id": "0565b12d-172b-49d1-818d-73505d662563",
-      "name": "When Executed by Another Workflow"
+      "id": "725fad8c-869a-42eb-8689-cbf8d10b8ab0",
+      "name": "Valor de producto"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -576
+      ],
+      "id": "8f13e597-3128-4b52-afb0-2d16b6156b17",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "0m8hCRuJ9UwuMq5W",
+          "name": "OpenAi account - soporte@valtmx.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres el Agente Principal de Bodas.com.mx (CEO Agent AI).\nTu función es automatizar el envío del primer correo a los clientes y actualizar su estado en Monday.\n\nDatos del cliente:\n- Nombre: {{ $json[\"Nombre\"] }}\n- Empresa / Venue ID: {{ $json[\"ID Venue\"] }}\n- Contacto: {{ $json[\"Contact Venue\"] }}\n- Email: {{ $json[\"Email\"] }}\n- Producto contratado: {{ $json[\"Producto\"] }}\n- Estado del proceso: {{ $json[\"Estado del proceso\"] }}\n- Técnico asignado: {{ $json[\"Técnico\"] }}\n- Estado del cliente: {{ $json[\"Estado\"] }}\n- Estado Email: {{ $json[\"Estado Email\"] }}\n\nTienes acceso a las siguientes herramientas:\n1. **Enviar primer email** → envía el correo de presentación a través de Zoho Mail.\n2. **Cambiar estado Email a enviar primer correo** → actualiza en Monday el campo “Estado Email” para reflejar que el correo fue enviado.\n\nInstrucciones:\n- Envía el primer correo usando **Enviar primer email**.\n- Después, ejecuta la herramienta **Cambiar estado Email a enviar primer correo**.\n- No repitas la acción si el estado ya está en “Enviar primer correo”.\n- No generes texto visible, solo ejecuta las herramientas en orden.\n- No avances automáticamente a otras etapas ni esperes entradas manuales.\n\nObjetivo: enviar el correo inicial y sincronizar el estado de envío en Monday.",
+        "options": {
+          "systemMessage": "=Eres un agente AI de Bodas.com.mx que coordina flujos automatizados de correo.\n\nTu propósito:\n- Enviar el primer correo de contacto mediante Zoho Mail.\n- Actualizar el estado “Estado Email” en Monday a “Enviar primer correo”.\n\nReglas:\n- Si el estado ya es “Enviar primer correo”, no repitas la acción.\n- No generes texto ni explicaciones visibles.\n- Ejecuta las herramientas en este orden:\n  1. Enviar primer email\n  2. Cambiar estado Email a enviar primer correo\n- No avances automáticamente a otras etapas hasta recibir un nuevo disparo manual."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        -864
+      ],
+      "id": "c73d3d98-4294-4781-a3da-c14be92d0262",
+      "name": "CEO"
+    },
+    {
+      "parameters": {
+        "fromEmail": "soporte@interprika.com",
+        "toEmail": "={{ $json.Email }}",
+        "subject": "=¿Cuándo podemos grabar el tour virtual 360 en {{ $json.Nombre }}?",
+        "emailFormat": "text",
+        "text": "=Buenos días {{ $json['Contact Venue'] }},\n\nNos ponemos en contacto contigo para que puedas programar fecha para la grabación del Tour Virtual 360º para tu escaparate en Bodas.com.mx  Cientos de empresas ya disfrutan de los beneficios de esta innovadora herramienta y las parejas ya han podido visitar los salones y jardines de numerosos espacios desde cualquier dispositivo sin tener que desplazarse, ¡así que no esperes más y agenda tu grabación cuanto antes!\n\n📱 Puedes contactarnos directamente por WhatsApp para definir la fecha que mejor te funcione. {{ $json['Whatsapp Contacto'] }}\n\nCon el fin de garantizar un servicio de calidad, te recordamos las condiciones para llevar a cabo el servicio:\n\nLa grabación se llevará a cabo en 4 horas.\n\nEs muy recomendable que decores tu espacio para que los novios puedan imaginar cómo será su boda en tu espacio.\n\nEs imprescindible que no haya personal ni invitados en el lugar en el que el técnico esté grabando.\n\nAquí tienes algunos ejemplos para que puedas obtener ideas:\nhttps://my.matterport.com/show/?m=aH9eAFJyJri&play=1&hl=2&lang=es&brand=0&title=0&vr=0\n\nQuedamos a la espera de tus indicaciones.\nCualquier duda, también puedes comunicarte al 477-254-0469.\n\nUn cordial saludo,",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSendTool",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        -608
+      ],
+      "id": "298728ca-f0f1-406f-83d6-6037bbdd33e1",
+      "name": "Enviar primer email",
+      "webhookId": "d5551a4c-1408-475b-bc9f-ec6b9f23d14d",
+      "credentials": {
+        "smtp": {
+          "id": "GhyliWIO0PYy31Mj",
+          "name": "SMTP account Zoho Mail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        80
+      ],
+      "id": "ae2a1338-d6f9-44ee-bea3-7698ba17921b",
+      "name": "Supabase Vector Store1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "tableId": "clientes",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name"
+            },
+            {
+              "fieldId": "id_venue"
+            },
+            {
+              "fieldId": "estado_del_proceso"
+            },
+            {
+              "fieldId": "fecha_cita"
+            },
+            {
+              "fieldId": "email"
+            },
+            {
+              "fieldId": "telefono"
+            },
+            {
+              "fieldId": "movil"
+            },
+            {
+              "fieldId": "producto"
+            },
+            {
+              "fieldId": "zona"
+            },
+            {
+              "fieldId": "comentario_comercial"
+            },
+            {
+              "fieldId": "fecha_actualizacion"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        672,
+        80
+      ],
+      "id": "49d56018-edc2-4f43-ae24-4018138cbf21",
+      "name": "Crear o actualizar clientes1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9ZSuKUqxsVYKzR8R",
+          "name": "Supabase account - Bodas.com.mx"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yfkvpx5Bpe3gV8O1",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yfkvpx5Bpe3gV8O1",
+          "cachedResultName": "Whatsapp automatizado"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        80
+      ],
+      "id": "e7dd166a-650c-4126-9c1d-245f2230ce50",
+      "name": "Whatsapp automatizado1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2KiLK3UqcH5RAAMg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2KiLK3UqcH5RAAMg",
+          "cachedResultName": "Correos automatizados"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        80
+      ],
+      "id": "c02268c0-da82-4de5-93b5-99558d00cdbe",
+      "name": "Correo automatizado1",
+      "disabled": true
     }
   ],
   "connections": {
@@ -781,12 +1059,23 @@
         []
       ]
     },
-    "When Executed by Another Workflow": {
-      "main": [
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
         [
           {
-            "node": "Estado de Email",
-            "type": "main",
+            "node": "CEO",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar primer email": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO",
+            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -801,7 +1090,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "8740f46f-2c41-4240-8739-b71b6872507e",
+  "versionId": "828c72d5-9be8-491c-afe1-7db490b7be31",
   "triggerCount": 1,
   "shared": [
     {
