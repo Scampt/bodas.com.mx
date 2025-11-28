@@ -1,6 +1,6 @@
 {
-  "createdAt": "2025-10-13T01:24:10.846Z",
   "updatedAt": "2025-10-13T03:19:27.000Z",
+  "createdAt": "2025-10-13T01:24:10.846Z",
   "id": "AVEmoWyN7zcv2zsJ",
   "name": "Eliminar workflows archivados",
   "active": false,
@@ -149,8 +149,8 @@
   "triggerCount": 0,
   "shared": [
     {
-      "createdAt": "2025-10-13T01:24:10.850Z",
       "updatedAt": "2025-10-13T01:24:10.850Z",
+      "createdAt": "2025-10-13T01:24:10.850Z",
       "role": "workflow:owner",
       "workflowId": "AVEmoWyN7zcv2zsJ",
       "projectId": "0KR2Gq9Kds58xeIV"
